@@ -1,0 +1,8 @@
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+.DS_Store
+test-results/
+.preview-profile/
+examples/**/preview/

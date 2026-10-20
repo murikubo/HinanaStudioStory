@@ -1,0 +1,10 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import exporter from '../../electron/exporter.cjs';
+import {parseProject} from '../../src/model.ts';
+const directory=path.dirname(fileURLToPath(import.meta.url)),root=path.resolve(directory,'../..');
+const raw=await readFile(path.join(directory,'마지막 방송이 끝나기 전에.hinanastory'),'utf8');parseProject(raw);
+const parent=path.join(root,'release/games');await mkdir(parent,{recursive:true});
+const result=await exporter.exportGame({raw,target:'macos',parent,dist:path.join(root,'dist'),electronVersion:JSON.parse(await readFile(path.join(root,'node_modules/electron/package.json'),'utf8')).version,progress:console.log});
+await mkdir(path.join(root,'test-results'),{recursive:true});await writeFile(path.join(root,'test-results/last-broadcast-macos-export.json'),JSON.stringify(result,null,2));console.log(`실행할 앱: ${result.appPath}`);

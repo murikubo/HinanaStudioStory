@@ -1,0 +1,57 @@
+[
+  {
+    "ending": "ENDING A · 내일, 이어서",
+    "characters": 3999,
+    "blocks": 65,
+    "estimatedMinutes": 4.8,
+    "decisions": [
+      "대본은 잠깐 두고, 네 이야기를 듣고 싶어.",
+      "틀려도 괜찮아. 지금 하고 싶은 말을 해 줘.",
+      "“내일, 이어서” 뒤에 다음 약속을 적는다."
+    ]
+  },
+  {
+    "ending": "ENDING B · 한 상자 분량의 안녕",
+    "characters": 4046,
+    "blocks": 65,
+    "estimatedMinutes": 4.8,
+    "decisions": [
+      "대본은 잠깐 두고, 네 이야기를 듣고 싶어.",
+      "틀려도 괜찮아. 지금 하고 싶은 말을 해 줘.",
+      "오늘의 날짜를 적고, 녹음한 인사를 함께 남긴다."
+    ]
+  },
+  {
+    "ending": "ENDING B · 한 상자 분량의 안녕",
+    "characters": 4079,
+    "blocks": 65,
+    "estimatedMinutes": 4.9,
+    "decisions": [
+      "대본은 잠깐 두고, 네 이야기를 듣고 싶어.",
+      "준비한 원고로 시작하자. 내가 옆에서 맞춰 줄게.",
+      "오늘의 날짜를 적고, 녹음한 인사를 함께 남긴다."
+    ]
+  },
+  {
+    "ending": "ENDING B · 한 상자 분량의 안녕",
+    "characters": 4063,
+    "blocks": 65,
+    "estimatedMinutes": 4.9,
+    "decisions": [
+      "일단 테이프부터 정리하자. 천천히 생각해도 돼.",
+      "틀려도 괜찮아. 지금 하고 싶은 말을 해 줘.",
+      "오늘의 날짜를 적고, 녹음한 인사를 함께 남긴다."
+    ]
+  },
+  {
+    "ending": "ENDING B · 한 상자 분량의 안녕",
+    "characters": 4096,
+    "blocks": 65,
+    "estimatedMinutes": 4.9,
+    "decisions": [
+      "일단 테이프부터 정리하자. 천천히 생각해도 돼.",
+      "준비한 원고로 시작하자. 내가 옆에서 맞춰 줄게.",
+      "오늘의 날짜를 적고, 녹음한 인사를 함께 남긴다."
+    ]
+  }
+]

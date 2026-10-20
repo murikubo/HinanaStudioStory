@@ -1,0 +1,89 @@
+{
+  "name": "hinana-story-studio",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "description": "A visual novel authoring studio",
+  "author": "Hinana Studio",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron . --dev\"",
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "preview": "vite preview --host 127.0.0.1",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "pack": "npm run build && electron-builder --dir",
+    "test:ui": "node scripts/smoke.mjs && node scripts/smoke-features.mjs && node scripts/smoke-layout.mjs && node scripts/smoke-editing.mjs && node scripts/smoke-library.mjs && node scripts/smoke-completion.mjs && node --experimental-strip-types scripts/smoke-scene-history.mjs && node --experimental-strip-types scripts/smoke-current-test.mjs && node --experimental-strip-types scripts/smoke-credits.mjs && node --experimental-strip-types scripts/smoke-drop-placement.mjs && node --experimental-strip-types scripts/smoke-cast-controls.mjs",
+    "test:game": "node scripts/export-sample.mjs && node scripts/smoke-player.mjs",
+    "test:mac": "npm run build && npm run test:game && node scripts/smoke-macos.mjs",
+    "test:distribution": "npm run build && node scripts/smoke-distribution.mjs",
+    "icons": "node scripts/build-icons.mjs"
+  },
+  "build": {
+    "appId": "studio.hinana.story",
+    "productName": "Hinana Studio Story",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "icon": "build/icons/studio.icns"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icons/studio.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icons/studio.ico",
+      "uninstallerIcon": "build/icons/studio.ico",
+      "installerHeaderIcon": "build/icons/studio.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "public/studio-icon.png"
+    },
+    "asarUnpack": [
+      "node_modules/**/*"
+    ]
+  },
+  "dependencies": {
+    "@electron/get": "^5.1.0",
+    "app-builder-lib": "^26.17.0",
+    "lucide-react": "^1.59.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "resedit": "^1.7.2",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.6",
+    "electron": "^44.9.0",
+    "electron-builder": "^26.17.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "wait-on": "^9.5.1"
+  }
+}

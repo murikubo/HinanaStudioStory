@@ -1,0 +1,46 @@
+{
+  "passed": true,
+  "routes": [
+    {
+      "first": 0,
+      "second": 0,
+      "ending": 0,
+      "scene": "tomorrow",
+      "courage": 2,
+      "steps": 66
+    },
+    {
+      "first": 0,
+      "second": 0,
+      "ending": 1,
+      "scene": "archive",
+      "courage": 2,
+      "steps": 66
+    },
+    {
+      "first": 0,
+      "second": 1,
+      "ending": 0,
+      "scene": "archive",
+      "courage": 1,
+      "steps": 66
+    },
+    {
+      "first": 1,
+      "second": 0,
+      "ending": 0,
+      "scene": "archive",
+      "courage": 1,
+      "steps": 66
+    },
+    {
+      "first": 1,
+      "second": 1,
+      "ending": 0,
+      "scene": "archive",
+      "courage": 0,
+      "steps": 66
+    }
+  ],
+  "issues": []
+}

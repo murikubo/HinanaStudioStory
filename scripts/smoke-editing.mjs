@@ -1,0 +1,34 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({headless:true});
+try{
+ const page=await browser.newPage({viewport:{width:1500,height:1050}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>localStorage.setItem('hinana:player:settings:v1',JSON.stringify({speed:0})));
+ await page.goto('http://127.0.0.1:5173');
+ const rows=page.locator('.line-row');
+ await page.getByRole('checkbox',{name:'블록 1 선택',exact:true}).check();await page.getByRole('checkbox',{name:'블록 2 선택',exact:true}).check();
+ await page.getByRole('button',{name:'선택 블록 아래로',exact:true}).click();
+ assert.ok((await rows.first().innerText()).includes('선택지 분기'));
+ await page.getByRole('button',{name:'실행 취소',exact:true}).click();
+ await page.locator('.block-tools').getByRole('button',{name:'복사',exact:true}).click();await page.locator('.block-tools').getByRole('button',{name:'붙여넣기',exact:true}).click();assert.equal(await rows.count(),5);
+ await page.getByRole('combobox',{name:'블록 이동 대상 장면'}).selectOption({label:'01 · 작은 약속'});await page.locator('.block-tools').getByRole('button',{name:'이동',exact:true}).click();assert.equal(await rows.count(),3);
+ await page.getByRole('button',{name:/02 01 · 작은 약속/}).click();assert.equal(await rows.count(),3);
+ await rows.last().locator('button.line-item').dragTo(rows.first().locator('button.line-item'));
+ assert.ok((await rows.first().innerText()).includes('우리 이 여름'));
+ const scenes=page.locator('.scene-item');await scenes.nth(1).dragTo(scenes.first());
+ assert.ok((await scenes.first().innerText()).includes('작은 약속'));
+ assert.ok((await scenes.nth(1).innerText()).includes('시작 장면'));
+ await page.getByRole('combobox',{name:'장면 끝의 다음 연결'}).selectOption({label:'02 · 하지 못한 말'});
+ await page.getByRole('button',{name:'플레이 테스트',exact:true}).click();const play=page.getByRole('dialog',{name:'플레이 테스트'});
+ await play.getByRole('button',{name:'다음',exact:true}).click();await play.getByRole('button',{name:'다음',exact:true}).click();await play.getByRole('button',{name:'다음 장면',exact:true}).click();await play.getByText('사실은… 너에게 꼭 하고 싶은 말이 있었어.',{exact:true}).waitFor();await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'장면 연결 그래프',exact:true}).click();assert.equal(await page.locator('.graph-node').count(),3);assert.equal(await page.locator('.edge-next').count(),1);
+ await page.getByText('연결 문제를 발견하지 못했습니다.',{exact:false}).waitFor();await page.screenshot({path:'test-results/scene-graph.png'});
+ await page.getByRole('button',{name:'새 장면 만들기'}).click();await page.locator('.flow-issues').getByText('시작 장면에서 도달할 수 없습니다.').waitFor();
+ await page.getByRole('button',{name:'선택 장면을 시작으로 지정'}).click();assert.equal(await page.locator('.graph-node').filter({hasText:'START'}).count(),1);
+ await page.locator('.project-menu summary').click();await page.getByRole('button',{name:'새 프로젝트',exact:true}).click();let dialog=page.getByRole('dialog',{name:'새 프로젝트',exact:true});await dialog.getByRole('textbox',{name:'프로젝트 이름'}).fill('빈 이야기');await dialog.getByRole('button',{name:'만들기',exact:true}).click();
+ await page.getByRole('dialog',{name:'변경 사항 저장'}).getByRole('button',{name:'취소',exact:true}).click();assert.equal(await page.locator('.scene-item').count(),4);
+ await page.locator('.project-menu summary').click();await page.getByRole('button',{name:'새 프로젝트',exact:true}).click();dialog=page.getByRole('dialog',{name:'새 프로젝트',exact:true});await dialog.getByRole('textbox',{name:'프로젝트 이름'}).fill('빈 이야기');await dialog.getByRole('button',{name:'만들기',exact:true}).click();await page.getByRole('dialog',{name:'변경 사항 저장'}).getByRole('button',{name:'저장하지 않고 계속'}).click();
+ assert.equal(await page.locator('.scene-item').count(),1);assert.equal(await page.getByRole('textbox',{name:'프로젝트 이름',exact:true}).inputValue(),'빈 이야기');
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'저장',exact:true}).click();const download=await downloadPromise;assert.equal(download.suggestedFilename(),'빈 이야기.hinanastory');
+ assert.deepEqual(errors,[]);console.log('PASS: multi-block reorder/copy/paste/transfer, block/scene drag, stable start scene, plain next-scene playback, graph reachability, new project unsaved guard, .hinanastory export');
+}finally{await browser.close()}

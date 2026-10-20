@@ -1,0 +1,23 @@
+import {chromium,expect} from '@playwright/test';
+import assert from 'node:assert/strict';
+import {newProject,newLine} from '../src/model.ts';
+const browser=await chromium.launch();
+try{
+ const page=await browser.newPage({viewport:{width:1500,height:1050}}),errors=[];page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:5173');await page.locator('.scene-item').first().waitFor();
+ const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=80;c.height=200;const ctx=c.getContext('2d');ctx.fillStyle='#b69ad7';ctx.fillRect(10,10,60,190);return c.toDataURL();});
+ const p=newProject('캐릭터 설정 통합');p.assets=[{id:'image',name:'캐릭터.png',type:'character',url:png}];p.characters=[{id:'alice',name:'하루',color:'#bda6d7',expressions:[{id:'e',name:'보통',assetId:'image'}]}];const scene=p.scenes[0],line=scene.lines[0];scene.character='image';scene.characterX=20;scene.characterY=99;scene.cast=[{characterId:'alice',expressionId:'e',position:'left',scale:70,layer:0,x:37,y:89}];line.character='image';line.characterX=76;line.characterY=95;line.position='right';scene.lines.push({...newLine(),cast:[]});
+ await page.locator('input[accept=".hinanastory,.hinana,.json"]').setInputFiles({name:'controls.hinanastory',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(p))});
+ const defaults=page.locator('details').filter({has:page.locator('summary',{hasText:'등장 캐릭터'})}),block=page.locator('details').filter({has:page.locator('summary',{hasText:'블록 캐릭터'})});
+ await defaults.locator('summary').click();await block.locator('summary').click();await page.getByText('캐릭터 연출 · 배경 음악',{exact:true}).click();
+ await expect(page.getByRole('combobox',{name:'캐릭터 이미지',exact:true})).toHaveCount(0);await expect(page.getByRole('combobox',{name:'캐릭터 위치',exact:true})).toHaveCount(0);await expect(page.getByRole('combobox',{name:'표정 이미지',exact:true})).toHaveCount(0);await expect(page.getByRole('combobox',{name:'블록별 위치',exact:true})).toHaveCount(0);await expect(page.getByRole('combobox',{name:'효과음',exact:true})).toHaveCount(1);
+ const scenePreset=page.getByRole('combobox',{name:'등장 캐릭터 1 위치',exact:true});await expect(scenePreset).toHaveValue('custom');await expect(block.getByText('장면 캐릭터 배치를 이어받고 있습니다.',{exact:true})).toBeVisible();
+ await block.getByRole('button',{name:'이 블록에서 따로 배치',exact:true}).click();const blockPreset=page.getByRole('combobox',{name:'블록 캐릭터 1 위치',exact:true});await expect(blockPreset).toHaveValue('custom');
+ await page.getByRole('button',{name:'캐릭터 수동 배치',exact:true}).click();const x=page.getByRole('spinbutton',{name:'캐릭터 X 좌표',exact:true}),y=page.getByRole('spinbutton',{name:'캐릭터 Y 좌표',exact:true});await expect(x).toHaveValue('37');await x.fill('62');await expect(blockPreset).toHaveValue('custom');await expect(scenePreset).toHaveValue('custom');
+ await blockPreset.selectOption('left');await expect(x).toHaveValue('23');await expect(y).toHaveValue('100');await page.keyboard.press('Control+z');await expect(x).toHaveValue('62');await expect(y).toHaveValue('89');await expect(blockPreset).toHaveValue('custom');
+ await block.getByRole('button',{name:'장면 설정으로 되돌리기',exact:true}).click();await expect(x).toHaveValue('37');await expect(y).toHaveValue('89');
+ await page.locator('.line-item').nth(1).click();await expect(page.locator('.editor-stage .character')).toHaveCount(0);await expect(page.getByRole('combobox',{name:'표정 이미지',exact:true})).toHaveCount(0);await block.getByRole('button',{name:'장면 설정으로 되돌리기',exact:true}).click();await expect(page.locator('.editor-stage .character')).toHaveCount(1);
+ await page.locator('.line-item').first().click();await defaults.getByRole('button',{name:'단일 이미지로 전환',exact:true}).click();await expect(page.getByRole('combobox',{name:'캐릭터 이미지',exact:true})).toHaveValue('image');const legacyScene=page.getByRole('combobox',{name:'캐릭터 위치',exact:true}),legacyLine=page.getByRole('combobox',{name:'블록별 위치',exact:true});await expect(legacyScene).toHaveValue('custom');await expect(legacyLine).toHaveValue('custom');await expect(x).toHaveValue('76');await expect(y).toHaveValue('95');
+ await legacyScene.selectOption('left');await expect(x).toHaveValue('76');await legacyLine.selectOption('');await expect(x).toHaveValue('23');await expect(y).toHaveValue('100');
+ await page.keyboard.press('Control+z');await expect(x).toHaveValue('76');await expect(legacyLine).toHaveValue('custom');
+ assert.deepEqual(errors,[]);console.log('PASS: active character mode shows only effective controls, manual/preset values stay synchronized, same-preset reset works, block inheritance and hidden cast work, mode switching preserves old image settings, undo restores coordinates');
+}finally{await browser.close();}

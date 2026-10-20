@@ -1,0 +1,21 @@
+import { _electron as electron } from '@playwright/test';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root=path.dirname(fileURLToPath(import.meta.url));
+const projectPath=path.join(root,'마지막 방송이 끝나기 전에.hinanastory');
+// Keep the author's existing window and recovery data untouched.
+const app=await electron.launch({args:['.','--dev',`--user-data-dir=${path.join(root,'.preview-profile')}`]});
+const page=await app.firstWindow();
+await page.getByRole('button',{name:'열기',exact:true}).waitFor();
+await app.evaluate(({dialog},file)=>{const original=dialog.showOpenDialog;dialog.showOpenDialog=async()=>{dialog.showOpenDialog=original;return{canceled:false,filePaths:[file]}};},projectPath);
+await page.getByRole('button',{name:'열기',exact:true}).click();
+await page.waitForFunction(()=>document.querySelector('.project-card input')?.value==='마지막 방송이 끝나기 전에');
+await page.getByRole('button',{name:'장면 연결 그래프',exact:true}).click();
+await page.getByText('연결 문제를 발견하지 못했습니다.',{exact:false}).waitFor();
+await page.screenshot({path:path.join(root,'studio-graph.png')});
+await page.getByRole('button',{name:'선택 장면 편집',exact:true}).click();
+await page.locator('.line-row').nth(3).locator('button.line-item').click();
+await page.waitForTimeout(500);
+await page.screenshot({path:path.join(root,'studio-editor.png')});
+console.log('Opened the finished sample in the development studio. Click 플레이 테스트 to play from the first scene. Existing studio data was left untouched.');
+await new Promise(resolve=>app.once('close',resolve));
