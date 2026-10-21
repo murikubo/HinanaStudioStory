@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('studio', {
+  saveScript:(raw,title,format)=>ipcRenderer.invoke('script:save',raw,title,format),
+  listBackups:key=>ipcRenderer.invoke('backup:list',key),
+  readBackup:(key,id)=>ipcRenderer.invoke('backup:read',key,id),
+  createBackup:(raw,reason)=>ipcRenderer.invoke('backup:create',raw,reason),
   savePlayData:(raw,title)=>ipcRenderer.invoke('play:save',raw,title),
   openPlayData:()=>ipcRenderer.invoke('play:open'),
   saveNew: content => ipcRenderer.invoke('project:save-new', content),

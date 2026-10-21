@@ -43,12 +43,18 @@ app.whenReady().then(() => {
       exports.remember(exported);return exported;
     } finally { exporting = false; }
   });
+  const scripts=require('./script-transfer.cjs').scriptTransfer({dialog,window:()=>win});
+  ipcMain.handle('script:save',async(event,...args)=>{trusted(event);return scripts.save(...args);});
   const transfer=require('./save-transfer.cjs').saveTransfer({dialog,window:()=>win});
   ipcMain.handle('play:save',async(event,raw,title)=>{trusted(event);return transfer.save(raw,title);});
   ipcMain.handle('play:open',async event=>{trusted(event);return transfer.open();});
-  const files = require('./project-files.cjs').projectFiles({ directory: app.getPath('userData'), dialog, window: () => win });
+  const backups=require('./project-backups.cjs').projectBackups({directory:app.getPath('userData')});
+  const files = require('./project-files.cjs').projectFiles({ directory: app.getPath('userData'), dialog, window: () => win,backups });
   const ready = files.init();
   const handle = (channel, action) => ipcMain.handle(channel, async (event,...args) => { trusted(event); await ready; return action(...args); });
+  handle('backup:list',key=>backups.list(key));
+  handle('backup:read',(key,id)=>backups.read(key,id));
+  handle('backup:create',(raw,reason)=>backups.create(raw,reason));
   handle('project:state', () => files.state());
   handle('project:activate', (file,title) => files.activate(file,title));
   handle('app:close-ready', () => {rendererReady=true;});

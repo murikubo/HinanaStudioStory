@@ -3,8 +3,9 @@ export function assetUsage(p:Project): Map<string,number> {
   const counts=new Map<string,number>();
   const add=(id:string|undefined)=>{if(id)counts.set(id,(counts.get(id)??0)+1);};
   add(p.metadata?.titleBackground);add(p.metadata?.icon);add(p.metadata?.creatorLogo);
+  for(const g of p.gallery??[])add(g.assetId);
   for(const c of p.characters??[])for(const e of c.expressions)add(e.assetId);
-  for(const s of p.scenes){add(s.background);add(s.character);add(s.bgm);for(const l of s.lines){add(l.character);add(l.sfx);}}
+  for(const s of p.scenes){add(s.background);add(s.character);add(s.bgm);for(const l of s.lines){add(l.character);add(l.sfx);add(l.voice);}}
   return counts;
 }
 export function removeUnused(p:Project): Project {const used=assetUsage(p);return {...p,assets:p.assets.filter(a=>used.has(a.id))};}

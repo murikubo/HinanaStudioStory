@@ -10,7 +10,7 @@ try {
   await page.getByRole('button',{name:'정보',exact:true}).click();
   const about=page.getByRole('dialog',{name:'HINANA STUDIO STORY'});
   await about.getByText('비나래',{exact:true}).waitFor();
-  await about.getByText('Ver. 0.6.0',{exact:true}).waitFor();
+  await about.getByText('Ver. 0.7.0',{exact:true}).waitFor();
   await mkdir('test-results',{recursive:true});
   await page.screenshot({path:'test-results/about.png'});
   await page.keyboard.press('Tab');

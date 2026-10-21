@@ -22,7 +22,7 @@ test('corrupt saves and unsafe numbers are rejected, settings are bounded', () =
   const slot=snapshot(p,start(p,p.scenes[0].id),[]);slot.session.index=-1;assert.equal(validSnapshot(p,slot),false);
   const bad=snapshot(p,start(p,p.scenes[0].id),[]);bad.session.variables.bad=Infinity;assert.equal(validSnapshot(p,bad),false);
   storage.setItem(settingsKey,JSON.stringify({speed:-4,autoDelay:90000,music:3,sound:-1,muted:'yes'}));
-  assert.deepEqual(readSettings(storage),{speed:0,autoDelay:10000,music:1,sound:0,muted:false});
+  assert.deepEqual(readSettings(storage),{speed:0,autoDelay:10000,music:1,sound:0,voice:1,voiceDucking:true,muted:false});
 });
 test('transition and sound settings serialize and reject broken audio references', () => {
   const p=demo();p.assets.push({id:'sound',name:'step.wav',type:'audio',url:'data:audio/wav;base64,AAAA'});

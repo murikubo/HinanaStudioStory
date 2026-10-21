@@ -4,7 +4,7 @@ const { randomUUID } = require('node:crypto');
 const {encodeProject,decodeProject}=require('./project-assets.cjs');
 const filter = [{ name: 'Hinana Studio Story', extensions: ['hinanastory'] }];
 const extension = file => /\.hinanastory$/i.test(file) ? file : file.replace(/\.(hinana|json)$/i, '') + '.hinanastory';
-function projectFiles({ directory, dialog, window }) {
+function projectFiles({ directory, dialog, window, backups }) {
   let currentPath = null, recent = [];
   const allowed = new Set(), config = path.join(directory,'recent-projects.json');
   async function init() { try { const data = JSON.parse(await fs.readFile(config,'utf8')); recent = Array.isArray(data) ? data.filter(r=>r&&typeof r.path==='string'&&typeof r.title==='string'&&typeof r.openedAt==='string').slice(0,10) : []; for (const r of recent) allowed.add(r.path); } catch {} }
@@ -34,10 +34,12 @@ function projectFiles({ directory, dialog, window }) {
         const canonical=async value=>{const resolved=await fs.realpath(value).catch(()=>path.resolve(value));return process.platform==='win32'?resolved.toLowerCase():resolved;};
         if(await canonical(file)===await canonical(currentPath))throw new Error('새 프로젝트는 원본과 다른 파일에 저장해 주세요.');
       }
+      let backupWarning;
+      if(backups){try{const previous=await read(file);await backups.create(previous.content,'before-save');}catch(error){if(error.code!=='ENOENT')backupWarning='이전 버전 백업을 만들지 못했습니다.';}}
       const temp=file+`.${randomUUID()}.tmp`;
       const stored=await encodeProject(content,file);
       try{await fs.writeFile(temp,stored,'utf8');await fs.rename(temp,file);}catch(error){await fs.rm(temp,{force:true});throw error;}
-      currentPath=file;allowed.add(file);await remember(file,p.title).catch(()=>{});return {path:file,recent:[...recent]};
+      currentPath=file;allowed.add(file);await remember(file,p.title).catch(()=>{});if(backups)try{await backups.create(content,'save');}catch{backupWarning='프로젝트는 저장했으나 백업을 만들지 못했습니다.';}return {path:file,recent:[...recent],...(backupWarning?{backupWarning}:{})};
     },
     open:async()=>{const result=await dialog.showOpenDialog(window(),{properties:['openFile'],filters:[{name:'Hinana Studio Story',extensions:['hinanastory','hinana','json']}]});return result.canceled?null:read(result.filePaths[0]);},
     openRecent:async file=>{if(!recent.some(r=>r.path===file))throw new Error('최근 프로젝트 목록에 없는 파일입니다.');return read(file);}

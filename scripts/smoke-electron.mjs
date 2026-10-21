@@ -16,7 +16,7 @@ try {
   assert.equal(prefs.sandbox, true);
   assert.equal(prefs.nodeIntegration, false);
   await page.getByRole('button', { name: '정보', exact: true }).click();
-  await page.getByRole('dialog', { name: 'HINANA STUDIO STORY' }).getByText('Ver. 0.6.0').waitFor();
+  await page.getByRole('dialog', { name: 'HINANA STUDIO STORY' }).getByText('Ver. 0.7.0').waitFor();
   await page.keyboard.press('Escape');
   const saved = path.join(dir, 'native.hinanastory');
   await app.evaluate(({ dialog }, saved) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: saved }); }, saved);

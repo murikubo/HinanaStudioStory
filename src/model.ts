@@ -8,18 +8,19 @@ export type Expression = { id: string; name: string; assetId: string };
 export type Character = { id: string; name: string; color: string; expressions: Expression[]; defaultExpression?: string };
 export type Placement = { characterId: string; expressionId?: string; position: Position; scale: number; layer: number; x?: number; y?: number; visible?: boolean };
 export type Transition = 'none' | 'fade' | 'slide';
-export type Line = { id: string; type: 'dialogue' | 'choice'; speaker: string; text: string; choices: Choice[]; character?: string; position?: Position; characterX?: number; characterY?: number; effects?: Effect[]; sfx?: string; sfxVolume?: number; speakerId?: string; cast?: Placement[] };
+export type Line = { id: string; type: 'dialogue' | 'choice'; speaker: string; text: string; choices: Choice[]; character?: string; position?: Position; characterX?: number; characterY?: number; effects?: Effect[]; sfx?: string; sfxVolume?: number; voice?: string; voiceVolume?: number; voiceAdvance?: boolean; speakerId?: string; cast?: Placement[] };
 export type Scene = { id: string; title: string; background: string; character: string; lines: Line[]; position?: Position; characterScale?: number; characterX?: number; characterY?: number; bgm?: string; volume?: number; loop?: boolean; transition?: Transition; duration?: number; characterMotion?: Transition; bgmFade?: number; next?: string; cast?: Placement[] };
 export type Asset = { id: string; name: string; type: 'background' | 'character' | 'audio'; url: string };
 export type ProjectMetadata = { author?:string; description?:string; releaseVersion?:string; copyright?:string; subtitle?:string; titleBackground?:string; icon?:string; accent?:string; credits?:string; endingMessage?:string; creatorLogo?:string };
-export type Project = { version: 1; title: string; scenes: Scene[]; assets: Asset[]; variables?: Variable[]; id?: string; startScene?: string; characters?: Character[]; storage?: 'embedded' | 'external'; metadata?: ProjectMetadata };
+export type GalleryEntry = {id:string;title:string;kind:'cg'|'ending';sceneId:string;lineId?:string;assetId?:string};
+export type Project = { version: 1; title: string; scenes: Scene[]; assets: Asset[]; variables?: Variable[]; id?: string; startScene?: string; characters?: Character[]; storage?: 'embedded' | 'external'; gallery?: GalleryEntry[]; metadata?: ProjectMetadata };
 export type Session = { sceneId: string; index: number; variables: Record<string, number> };
 export const uid = () => crypto.randomUUID();
 export const newLine = (type: Line['type'] = 'dialogue'): Line => ({ id: uid(), type, speaker: '', text: '', choices: [] });
 export const newScene = (n: number): Scene => ({ id: uid(), title: `새로운 장면 ${n}`, background: 'default', character: '', lines: [newLine()] });
 export function demo(): Project {
   const a = uid(), b = uid(), c = uid();
-  return { version: 1, title: '여름의 끝에서', assets: [], scenes: [
+  return { version: 1, id:a, title: '여름의 끝에서', assets: [], scenes: [
     { id: a, title: '프롤로그 · 다시 만난 여름', background: 'default', character: '', lines: [
       { id: uid(), type: 'dialogue', speaker: '', text: '여름의 끝자락. 익숙한 교실에는 오후의 빛이 내려앉아 있었다.', choices: [] },
       { id: uid(), type: 'dialogue', speaker: '하루', text: '있잖아, 우리 이 여름을 조금만 더 붙잡아 볼까?', choices: [] },
@@ -105,6 +106,9 @@ export function parseProject(raw: string): Project {
       if (l.character !== undefined && l.character !== '' && l.character !== '__none' && !image(l.character)) fail();
       if (l.sfx !== undefined && l.sfx !== '' && !p.assets.some((a: Asset) => a.id === l.sfx && a.type === 'audio')) fail();
       if (l.sfxVolume !== undefined && (!number(l.sfxVolume) || l.sfxVolume < 0 || l.sfxVolume > 1)) fail();
+      if(l.voice!==undefined&&l.voice!==''&&!p.assets.some((a:Asset)=>a.id===l.voice&&a.type==='audio'))fail();
+      if(l.voiceVolume!==undefined&&(!number(l.voiceVolume)||l.voiceVolume<0||l.voiceVolume>1))fail();
+      if(l.voiceAdvance!==undefined&&typeof l.voiceAdvance!=='boolean')fail();
       if (l.effects !== undefined && !Array.isArray(l.effects)) fail();
       for (const e of l.effects ?? []) if (!object(e) || !variable(e.variableId) || !['set','add'].includes(e.operation) || !number(e.value)) fail();
       for (const c of l.choices) {
@@ -113,6 +117,14 @@ export function parseProject(raw: string): Project {
         const q = c.condition;
         if (q !== undefined && (!object(q) || !variable(q.variableId) || !['==','!=','>','>=','<','<='].includes(q.operator) || !number(q.value))) fail();
       }
+    }
+  }
+  if(p.gallery!==undefined){
+    if(!Array.isArray(p.gallery)||p.gallery.length>500)fail();
+    for(const entry of p.gallery){if(!object(entry))fail();unique(entry.id);if(!str(entry.title)||!entry.title.trim()||entry.title.length>500||!['cg','ending'].includes(entry.kind))fail();
+      const scene=p.scenes.find((s:Scene)=>s.id===entry.sceneId);if(!scene)fail();
+      if(entry.lineId!==undefined&&!scene.lines.some((l:Line)=>l.id===entry.lineId))fail();
+      if(entry.assetId!==undefined&&entry.assetId!==''&&!image(entry.assetId))fail();if(entry.kind==='cg'&&!image(entry.assetId))fail();
     }
   }
   return p;
@@ -180,7 +192,7 @@ export function reorderScenes(p: Project, id: string, beforeId: string): Project
 export function deleteScene(p: Project, id: string): Project {
   if (p.scenes.length < 2 || !p.scenes.some(s => s.id === id)) return p;
   const scenes = p.scenes.filter(s => s.id !== id).map(s => ({ ...s, next: s.next === id ? '' : s.next, lines: s.lines.map(l => ({ ...l, choices: l.choices.filter(c => c.target !== id) })) }));
-  return { ...p, startScene: (p.startScene ?? p.scenes[0].id) === id ? scenes[0].id : p.startScene, scenes };
+  return { ...p, ...(p.gallery?{gallery:p.gallery.filter(e=>e.sceneId!==id)}:{}), startScene: (p.startScene ?? p.scenes[0].id) === id ? scenes[0].id : p.startScene, scenes };
 }
 export function cloneLines(lines: Line[]): Line[] {
   return structuredClone(lines).map(l => ({ ...l, id: uid(), choices: l.choices.map(c => ({ ...c, id: uid() })) }));
@@ -208,4 +220,12 @@ export function transferBlocks(p: Project, sourceId: string, ids: string[], targ
     if (s.id === sourceId && !copy) { const lines = s.lines.filter(l => !ids.includes(l.id)); return { ...s, lines: lines.length ? lines : [newLine()] }; }
     return s;
   }) };
+}
+
+export function reconcileGallery(p:Project):Project{
+ if(!p.gallery)return p;let changed=false;
+ const entries=p.gallery.flatMap(e=>{
+  if(e.lineId){const scene=p.scenes.find(s=>s.lines.some(l=>l.id===e.lineId));if(!scene){changed=true;return [];}if(e.sceneId!==scene.id){changed=true;return [{...e,sceneId:scene.id}];}}
+  else if(!p.scenes.some(s=>s.id===e.sceneId)){changed=true;return [];}return [e];
+ });return changed?{...p,gallery:entries}:p;
 }

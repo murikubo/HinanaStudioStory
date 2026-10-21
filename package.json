@@ -1,6 +1,6 @@
 {
   "name": "hinana-story-studio",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "A visual novel authoring studio",
@@ -15,11 +15,13 @@
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win nsis --x64",
     "pack": "npm run build && electron-builder --dir",
-    "test:ui": "node scripts/smoke.mjs && node scripts/smoke-features.mjs && node scripts/smoke-layout.mjs && node scripts/smoke-editing.mjs && node scripts/smoke-library.mjs && node scripts/smoke-completion.mjs && node --experimental-strip-types scripts/smoke-scene-history.mjs && node --experimental-strip-types scripts/smoke-current-test.mjs && node --experimental-strip-types scripts/smoke-credits.mjs && node --experimental-strip-types scripts/smoke-drop-placement.mjs && node --experimental-strip-types scripts/smoke-cast-controls.mjs",
+    "test:ui": "node scripts/smoke.mjs && node scripts/smoke-features.mjs && node scripts/smoke-layout.mjs && node scripts/smoke-editing.mjs && node scripts/smoke-library.mjs && node scripts/smoke-completion.mjs && node --experimental-strip-types scripts/smoke-scene-history.mjs && node --experimental-strip-types scripts/smoke-current-test.mjs && node --experimental-strip-types scripts/smoke-credits.mjs && node --experimental-strip-types scripts/smoke-drop-placement.mjs && node --experimental-strip-types scripts/smoke-cast-controls.mjs && node --experimental-strip-types scripts/smoke-authoring-suite.mjs",
     "test:game": "node scripts/export-sample.mjs && node scripts/smoke-player.mjs",
     "test:mac": "npm run build && npm run test:game && node scripts/smoke-macos.mjs",
     "test:distribution": "npm run build && node scripts/smoke-distribution.mjs",
-    "icons": "node scripts/build-icons.mjs"
+    "icons": "node scripts/build-icons.mjs",
+    "test:authoring": "node --experimental-strip-types scripts/smoke-authoring-suite.mjs",
+    "test:authoring-game": "node scripts/smoke-authoring-game.mjs"
   },
   "build": {
     "appId": "studio.hinana.story",
